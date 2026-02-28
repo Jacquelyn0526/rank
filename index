@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>灵宠进化：变色喷火与荣耀排行榜</title>
+    <style>
+        :root {
+            --primary: #7d5fff; --bg: #f0f2f5; --success: #2ecc71;
+            --danger: #e74c3c; --warning: #f1c40f; --card-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            --gold: #ffd700; --silver: #c0c0c0; --bronze: #cd7f32;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'PingFang SC', sans-serif; }
+        body { background-color: var(--bg); padding-bottom: 50px; }
+
+        /* --- 导航与布局 --- */
+        nav { background: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 2000; }
+        .logo { font-size: 20px; font-weight: bold; color: var(--primary); }
+        .main-layout { max-width: 1400px; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+
+        /* --- 控制面板 --- */
+        .admin-panel { grid-column: 1 / -1; background: white; border-radius: 20px; padding: 20px; border: 2px solid var(--primary); box-shadow: var(--card-shadow); margin-bottom: 10px; }
+        .control-grid { display: grid; grid-template-columns: 320px 1fr; gap: 30px; }
+        .box-title { font-size: 13px; font-weight: bold; margin-bottom: 10px; color: #555; display: flex; justify-content: space-between; }
+        .multi-select-zone { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 5px; max-height: 120px; overflow-y: auto; padding: 10px; background: #f9f9f9; border-radius: 10px; border: 1px solid #eee; }
+        .stu-item { font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 6px; }
+        .action-btn { padding: 8px 12px; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
+        .btn-plus { background: var(--success); } .btn-minus { background: var(--danger); }
+
+        /* --- 灵宠显示卡片 --- */
+        .pet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .pet-card { background: white; border-radius: 20px; padding: 20px; text-align: center; box-shadow: var(--card-shadow); position: relative; transition: 0.4s; overflow: visible; }
+        
+        /* 勋章标记 */
+        .medal-badge { position: absolute; top: -10px; right: -10px; font-size: 30px; z-index: 100; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+
+        /* 灵宠本体与器官 */
+        .pet-body { width: 60px; height: 60px; margin: 30px auto; position: relative; transition: all 0.5s; background: var(--primary); border-radius: 50%; }
+        .pet-body::after, .pet-body::before { content:''; position:absolute; width:6px; height:6px; background:white; border-radius:50%; top:15px; z-index:10; }
+        .pet-body::before { left:15px; } .pet-body::after { right:15px; }
+
+        .organ { position: absolute; display: none; background: inherit; }
+        .pacifier { width: 12px; height: 12px; background: white; border: 2px solid #ddd; border-radius: 50%; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 11; }
+        .hand { width: 10px; height: 18px; border-radius: 10px; top: 25px; }
+        .hand-l { left: -8px; transform: rotate(-20deg); } .hand-r { right: -8px; transform: rotate(20deg); }
+        .foot { width: 12px; height: 18px; border-radius: 10px; bottom: -8px; }
+        .foot-l { left: 10px; } .foot-r { right: 10px; }
+        .horn { width: 10px; height: 18px; background: #444; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); top: -12px; }
+        .horn-l { left: 12px; transform: rotate(-15deg); } .horn-r { right: 12px; transform: rotate(15deg); }
+        .wing { width: 35px; height: 20px; background: rgba(0,0,0,0.1); border-radius: 50% 50% 0 0; top: 12px; z-index: -1; }
+        .wing-l { left: -30px; transform: rotate(-30deg); } .wing-r { right: -30px; transform: rotate(30deg); }
+        
+        /* 变色喷火 */
+        .fire { width: 30px; height: 20px; clip-path: polygon(0 50%, 100% 0, 80% 50%, 100% 100%); right: -30px; bottom: 10px; animation: flicker 0.2s infinite; filter: brightness(1.2); }
+        
+        .spell-ring { width: 80px; height: 80px; border: 2px dashed var(--primary); border-radius: 50%; top: -10px; left: -10px; animation: rotate 4s linear infinite; }
+        .toy-ball { width: 15px; height: 15px; background: var(--warning); border-radius: 50%; top: -30px; right: 0; animation: bounce 1s infinite; }
+
+        @keyframes flicker { 0%, 100% { transform: scaleX(1); opacity: 0.8; } 50% { transform: scaleX(1.2); opacity: 1; } }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* --- 排行榜侧栏 --- */
+        .rank-sidebar { background: white; border-radius: 20px; padding: 20px; box-shadow: var(--card-shadow); align-self: start; }
+        .rank-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; text-align: center; border-bottom: 2px solid #f4f1ff; padding-bottom: 10px; }
+        .rank-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f9f9f9; }
+        .rank-num { width: 25px; font-weight: bold; color: #999; }
+        .rank-name { flex: 1; font-size: 13px; font-weight: bold; }
+        .rank-lv { font-size: 11px; color: var(--primary); }
+
+        /* --- 进度条 --- */
+        .progress-container { background: #eee; height: 6px; border-radius: 3px; margin: 12px 0 5px; overflow: hidden; }
+        .progress-bar { background: var(--success); height: 100%; transition: width 0.5s; }
+        .info-row { font-size: 10px; color: #999; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="logo">🔥 灵宠进化助手 (具象变色版)</div>
+    <div class="nav-btns">
+        <button id="nav-hall" class="active" onclick="switchTab('hall')">主大厅</button>
+        <button id="nav-report" onclick="switchTab('report')">成长日志</button>
+    </div>
+</nav>
+
+<div class="main-layout">
+    <main>
+        <div class="admin-panel" id="admin-panel">
+            <div class="control-grid">
+                <div>
+                    <div class="box-title">登入学生</div>
+                    <div style="display:flex; gap:5px; margin-bottom:10px;">
+                        <input type="text" id="stu-name" placeholder="姓名..." style="flex:1; padding:8px; border-radius:6px; border:1px solid #ddd;">
+                        <button class="action-btn" style="background:var(--primary)" onclick="addStudent()">登入</button>
+                    </div>
+                    <div class="box-title">名单 <span onclick="selectAll(true)" style="color:var(--primary); cursor:pointer">全选</span></div>
+                    <div class="multi-select-zone" id="select-zone"></div>
+                </div>
+                <div>
+                    <div class="box-title">奖励动作 (加分)</div>
+                    <div class="btn-group" style="margin-bottom:15px;">
+                        <button class="action-btn btn-plus" onclick="batchUpdate(5, '完成练习')">练习+5</button>
+                        <button class="action-btn btn-plus" onclick="batchUpdate(3, '完成订正')">订正+3</button>
+                        <button class="action-btn btn-plus" onclick="batchUpdate(2, '合作愉快')">合作+2</button>
+                        <button class="action-btn btn-plus" onclick="batchUpdate(2, '态度认真')">态度+2</button>
+                        <button class="action-btn btn-plus" onclick="batchUpdate(1, '准时')">没迟到+1</button>
+                    </div>
+                    <div class="box-title">惩罚动作 (扣分)</div>
+                    <div class="btn-group">
+                        <button class="action-btn btn-minus" onclick="batchUpdate(-2, '迟到')">迟到-2</button>
+                        <button class="action-btn btn-minus" onclick="batchUpdate(-2, '没带书')">没带书-2</button>
+                        <button class="action-btn btn-minus" onclick="batchUpdate(-3, '态度差')">态度差-3</button>
+                        <button class="action-btn btn-minus" onclick="batchUpdate(-5, '纪律问题')">纪律-5</button>
+                        <button class="action-btn btn-minus" onclick="batchUpdate(-5, '欠功课')">欠功课-5</button>
+                    </div>
+                    <div style="text-align:right; margin-top:10px;">
+                        <button onclick="clearStorage()" style="background:none; border:none; color:#ccc; font-size:10px; cursor:pointer;">重置系统</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-hall" class="pet-grid"></div>
+        <div id="page-report" style="display:none; background:white; padding:20px; border-radius:20px;">
+            <table style="width:100%; border-collapse:collapse;" id="log-table">
+                <thead><tr style="text-align:left; border-bottom:2px solid #eee;"><th style="padding:10px;">时间</th><th>姓名</th><th>事件</th><th>变动</th></tr></thead>
+                <tbody id="log-body"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <aside class="rank-sidebar" id="sidebar">
+        <div class="rank-title">🏆 灵力光荣榜</div>
+        <div id="rank-content"></div>
+    </aside>
+</div>
+
+<script>
+    let students = JSON.parse(localStorage.getItem('pet_evolution_v3')) || [];
+
+    // 等级算法 (365级基础)
+    function getNextLevelPoints(lv) { return Math.floor(10 + (lv / 365) * 20); }
+    function calculateLevel(pts) {
+        let lv = 0; let remain = pts;
+        while (remain >= getNextLevelPoints(lv) && lv < 1000) { remain -= getNextLevelPoints(lv); lv++; }
+        return { lv, cur: remain, next: getNextLevelPoints(lv) };
+    }
+
+    function addStudent() {
+        const name = document.getElementById('stu-name').value.trim();
+        if(!name) return;
+        students.push({ id: Date.now(), name, points: 0, color: `hsl(${Math.random()*360},70%,60%)`, logs: [] });
+        document.getElementById('stu-name').value = "";
+        update();
+    }
+
+    function batchUpdate(val, reason) {
+        const selected = Array.from(document.querySelectorAll('.stu-check:checked')).map(c => parseFloat(c.value));
+        if(!selected.length) return alert("请在名单中勾选学生");
+        const time = new Date().toLocaleString('zh-CN', {hour12:false}).split(' ')[1];
+        students.forEach(s => {
+            if(selected.includes(s.id)) {
+                s.points = Math.max(0, s.points + val);
+                s.logs.unshift({ time, reason, val });
+            }
+        });
+        update();
+    }
+
+    function update() {
+        localStorage.setItem('pet_evolution_v3', JSON.stringify(students));
+        renderAll();
+    }
+
+    function renderAll() {
+        renderSelection();
+        renderHall();
+        renderRank();
+    }
+
+    function renderSelection() {
+        document.getElementById('select-zone').innerHTML = students.map(s => `
+            <label class="stu-item"><input type="checkbox" class="stu-check" value="${s.id}"> ${s.name}</label>
+        `).join('');
+    }
+
+    function renderHall() {
+        const hall = document.getElementById('page-hall');
+        if(!students.length) { hall.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:#999; padding:40px;">等待学生登入...</p>`; return; }
+
+        // 排序获取前三名
+        const sorted = [...students].sort((a,b) => b.points - a.points);
+        
+        hall.innerHTML = students.map(s => {
+            const { lv, cur, next } = calculateLevel(s.points);
+            const p = (cur / next) * 100;
+            const rankPos = sorted.findIndex(ts => ts.id === s.id);
+            
+            let medal = "";
+            if(rankPos === 0 && s.points > 0) medal = '<div class="medal-badge">🥇</div>';
+            else if(rankPos === 1 && s.points > 0) medal = '<div class="medal-badge">🥈</div>';
+            else if(rankPos === 2 && s.points > 0) medal = '<div class="medal-badge">🥉</div>';
+
+            const show = (targetLv) => lv >= targetLv ? 'block' : 'none';
+
+            return `
+                <div class="pet-card">
+                    ${medal}
+                    <div style="font-size:10px; color:#999; position:absolute; top:10px; left:15px;">Lv.${lv}</div>
+                    <div class="pet-body ${lv >= 310 ? 'stealth' : ''}" style="background:${s.color}; border-radius:${lv < 10 ? '50% 50% 45% 45%' : (lv >= 300 ? '40% 60% 40% 60%' : '50%')}">
+                        <div class="organ pacifier" style="display:${show(30)}"></div>
+                        <div class="organ hand hand-l" style="display:${show(60)}"></div>
+                        <div class="organ hand hand-r" style="display:${show(60)}"></div>
+                        <div class="organ foot foot-l" style="display:${show(100)}"></div>
+                        <div class="organ foot foot-r" style="display:${show(100)}"></div>
+                        <div class="organ horn horn-l" style="display:${show(150)}"></div>
+                        <div class="organ horn horn-r" style="display:${show(150)}"></div>
+                        <div class="organ toy-ball" style="display:${show(160)}"></div>
+                        <div class="organ wing wing-l" style="display:${show(180)}"></div>
+                        <div class="organ wing wing-r" style="display:${show(180)}"></div>
+                        <div class="organ fire" style="display:${show(250)}; background:${s.color}"></div>
+                        <div class="organ spell-ring" style="display:${show(330)}; border-color:${s.color}"></div>
+                    </div>
+                    <div style="font-weight:bold; font-size:14px;">${s.name}</div>
+                    <div class="progress-container"><div class="progress-bar" style="width:${p}%"></div></div>
+                    <div class="info-row"><span>${cur}/${next} 灵力</span><span>阶梯:${lv}级</span></div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderRank() {
+        const sorted = [...students].sort((a,b) => b.points - a.points).slice(0, 10);
+        document.getElementById('rank-content').innerHTML = sorted.map((s, i) => {
+            const { lv } = calculateLevel(s.points);
+            return `
+                <div class="rank-row">
+                    <span class="rank-num">${i+1}</span>
+                    <span class="rank-name">${s.name}</span>
+                    <span class="rank-lv">Lv.${lv}</span>
+                </div>
+            `;
+        }).join('') || '<p style="text-align:center; color:#ccc; font-size:12px;">暂无排名</p>';
+    }
+
+    function switchTab(t) {
+        document.getElementById('page-hall').style.display = t === 'hall' ? 'grid' : 'none';
+        document.getElementById('page-report').style.display = t === 'report' ? 'block' : 'none';
+        document.getElementById('sidebar').style.display = t === 'hall' ? 'block' : 'none';
+        document.getElementById('admin-panel').style.display = t === 'hall' ? 'block' : 'none';
+        document.getElementById('nav-hall').className = t === 'hall' ? 'active' : '';
+        document.getElementById('nav-report').className = t === 'report' ? 'active' : '';
+        if(t === 'report') renderLogs();
+    }
+
+    function renderLogs() {
+        let rows = [];
+        students.forEach(s => s.logs.forEach(l => rows.push({ ...l, name: s.name })));
+        document.getElementById('log-body').innerHTML = rows.map(r => `
+            <tr style="border-bottom:1px solid #eee;"><td style="padding:10px;">${r.time}</td><td><b>${r.name}</b></td><td>${r.reason}</td><td style="color:${r.val>0? 'var(--success)':'var(--danger)'};"><b>${r.val>0?'+':''}${r.val}</b></td></tr>
+        `).join('');
+    }
+
+    function selectAll(v) { document.querySelectorAll('.stu-check').forEach(c => c.checked = v); }
+    function clearStorage() { if(confirm("确定清空所有学生数据？")) { localStorage.clear(); location.reload(); } }
+
+    renderAll();
+</script>
+</body>
+</html>
